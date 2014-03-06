@@ -1,0 +1,78 @@
+#!/usr/bin/perl
+
+# Purpose:  help me manage MR configurations
+
+use strict;
+
+our $home = $ENV{"HOME"};
+our $hostname = `hostname`;
+chop $hostname;
+our $user=$ENV{"USERNAME"};
+our %Globals;
+
+$Globals{"confdir"} = "$home/.config/mr";
+$Globals{"availabledir"} = "$home/.config/mr/available.d";
+$Globals{"hostdir"} = "$home/.config/mr/host.d/$hostname";
+
+&main;
+
+sub main {
+    print "Available:\n";
+    &showFiles(&getFiles($Globals{"availabledir"}));
+
+    print "In Use:\n";
+    &showFiles(&getFiles($Globals{"hostdir"}));
+}
+
+sub showFiles {
+    foreach my $file (@_) {
+	my $name = $file->{name};
+	my $description = $file->{description};
+	my @tags = @{$file->{tags}};
+
+	print " $name (@tags):  $description\n";
+    }
+}
+
+sub getFiles {
+    my $dir = shift;
+    my @files;
+
+    opendir(my $dh, $dir) || die("Failed to read $dir: $!");
+
+    while($_ = readdir($dh)) {
+	next unless /(.*)\.conf$/;
+	my $file;
+	$file->{name} = $1;
+	$file->{path} = "$dir/$_";
+	&getFileInfo($file);
+	push(@files, $file);
+    }
+
+    closedir($dh);
+
+    return @files;
+}
+
+sub getFileInfo {
+    my $file = shift;
+    my $path = $file->{path};
+
+    open(my $fh, $path) || die("could not read $file: $!");
+
+    my @tags;
+
+    while(<$fh>) {
+	if(/tags:(.*)/) {
+	    @tags = split(/\s+/, $1);
+	}
+	if(/description: (.*)/) {
+	    $file->{description} = $1;
+	}
+    }
+
+    $file->{tags}=\@tags;
+
+    close $fh;
+    return;
+}

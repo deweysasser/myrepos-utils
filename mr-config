@@ -18,13 +18,7 @@ $Globals{"hostdir"} = "$home/.config/mr/host.d/$hostname";
 
 sub main {
 
-    if($ARGV[0] eq "add") {
-	shift @ARGV;
-	my @available = &getFiles($Globals{"availabledir"});
-	my @toadd = &filter(\@available, @ARGV);
-	&addFiles($Globals{hostdir}, @toadd);
-    }
-    elsif($ARGV[0] eq "show") {
+    if($ARGV[0] eq "show") {
 	shift @ARGV;
 	my @available = &getFiles($Globals{"availabledir"});
 	my @toadd = &filter(\@available, @ARGV);
@@ -35,12 +29,14 @@ sub main {
 	my @available = &getFiles($Globals{"availabledir"});
 	my @toadd = &filter(\@available, @ARGV);
 	&addFiles($Globals{hostdir}, @toadd);
+	&showInUse;
     }
     elsif($ARGV[0] eq "remove") {
 	shift @ARGV;
 	my @available = &getFiles($Globals{"availabledir"});
 	my @toadd = &filter(\@available, @ARGV);
 	&removeFiles($Globals{hostdir}, @toadd);
+	&showInUse;
     }
     elsif($ARGV[0] eq "list") {
 	&cmd_list;
@@ -110,9 +106,12 @@ sub filter {
 }
 
 sub cmd_list {
-    print "Available:\n";
+    showInUse();
+    print "\nAvailable:\n";
     &showFiles(&getFiles($Globals{"availabledir"}));
+}
 
+sub showInUse() {
     print "In Use:\n";
     &showFiles(&getFiles($Globals{"hostdir"}));
 }

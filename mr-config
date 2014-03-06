@@ -109,11 +109,25 @@ sub filter {
     my $re = "(" . join("|", @args) . ")";
 
     foreach my $tag (@args) {
-	@files = grep {$_->{name} =~ /$tag/ || join(",", @{$_->{tags}}) =~ /$tag/ }  @files;
+	@files = grep { &shouldInclude($tag, $_) }  @files;
     }
 
-
     return @files;
+}
+
+sub shouldInclude {
+    my $tag = shift;
+    my $file = shift;
+    my $opposite = 0;
+
+    if($tag =~ /^!(.*)/) {
+	$opposite = 1;
+	$tag = $1;
+    }
+
+    my $predicate = $file->{name} =~ /$tag/ ||  join(",", @{$_->{tags}}) =~ /$tag/;
+
+    return $opposite ^ $predicate;
 }
 
 sub cmd_list {

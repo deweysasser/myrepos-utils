@@ -17,6 +17,99 @@ $Globals{"hostdir"} = "$home/.config/mr/host.d/$hostname";
 &main;
 
 sub main {
+
+    if($ARGV[0] eq "add") {
+	shift @ARGV;
+	my @available = &getFiles($Globals{"availabledir"});
+	my @toadd = &filter(\@available, @ARGV);
+	&addFiles($Globals{hostdir}, @toadd);
+    }
+    elsif($ARGV[0] eq "show") {
+	shift @ARGV;
+	my @available = &getFiles($Globals{"availabledir"});
+	my @toadd = &filter(\@available, @ARGV);
+	&showFiles(@toadd);
+    }
+    elsif($ARGV[0] eq "add") {
+	shift @ARGV;
+	my @available = &getFiles($Globals{"availabledir"});
+	my @toadd = &filter(\@available, @ARGV);
+	&addFiles($Globals{hostdir}, @toadd);
+    }
+    elsif($ARGV[0] eq "remove") {
+	shift @ARGV;
+	my @available = &getFiles($Globals{"availabledir"});
+	my @toadd = &filter(\@available, @ARGV);
+	&removeFiles($Globals{hostdir}, @toadd);
+    }
+    elsif($ARGV[0] eq "list") {
+	&cmd_list;
+    }
+    else {
+	&cmd_list;
+    }
+
+}
+
+sub addFiles{
+    my $dir = shift;
+    my @files = @_;
+
+    foreach my $file (@files) {
+	my $name = $file->{name};
+	my $path = "$dir/$name.conf";
+
+	unless (-r $path) {
+	    print "Adding $name\n";
+	    symlink("../../available.d/$name.conf", $path);
+	}
+    }
+}
+
+sub removeFiles{
+    my $dir = shift;
+    my @files = @_;
+
+    foreach my $file (@files) {
+	my $name = $file->{name};
+	my $path = "$dir/$name.conf";
+
+	if(-r $path) {
+	    print "Removing $name\n";
+	    unlink($path);
+	}
+    }
+}
+
+sub symlink {
+    my $target = shift;
+    my $ref = shift;
+
+    return !system("ln -s $target $ref");
+}
+
+sub filter {
+    my $filesRef = shift;
+    my @files = @{$filesRef};
+    my @args=@_;
+
+    my @results;
+
+    # make a regexp
+
+    my $re = "(" . join("|", @args) . ")";
+
+    foreach my $file (@files) {
+	my $tags = join(",", @{$file->{tags}});
+	my $name = $file->{name};
+
+	push(@results, $file) if($name =~ /$re/ || $tags =~ /$re/);
+    }
+
+    return @results;
+}
+
+sub cmd_list {
     print "Available:\n";
     &showFiles(&getFiles($Globals{"availabledir"}));
 

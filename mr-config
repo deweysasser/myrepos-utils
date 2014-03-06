@@ -92,20 +92,18 @@ sub filter {
     my @files = @{$filesRef};
     my @args=@_;
 
-    my @results;
+
 
     # make a regexp
 
     my $re = "(" . join("|", @args) . ")";
 
-    foreach my $file (@files) {
-	my $tags = join(",", @{$file->{tags}});
-	my $name = $file->{name};
-
-	push(@results, $file) if($name =~ /$re/ || $tags =~ /$re/);
+    foreach my $tag (@args) {
+	@files = grep {$_->{name} =~ /$tag/ || join(",", @{$_->{tags}}) =~ /$tag/ }  @files;
     }
 
-    return @results;
+
+    return @files;
 }
 
 sub cmd_list {
